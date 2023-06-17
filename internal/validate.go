@@ -15,7 +15,7 @@ type validator struct {
 func NewValidator(expression string) (*validator, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("self", cel.StringType),
-		cel.Variable("csr", cel.MapType(cel.StringType, cel.StringType)),
+		cel.Variable("cr", cel.MapType(cel.StringType, cel.StringType)),
 		ext.Strings(),
 	)
 	if err != nil {

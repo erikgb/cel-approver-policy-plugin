@@ -29,8 +29,8 @@ The approximate flow when writing an approver-policy plugin (that this sample im
 
 ## CEL plugin
 
-This repo contains an experimental plugin `cel-approver-policy-plugin` that allows to specify CEL expressions for CSR
-attributes that is used to decide if `CertificateRequest`s can be approved.
+This repo contains an experimental plugin `cel-approver-policy-plugin` that allows to specify CEL expressions
+used to decide if `CertificateRequest`s can be approved.
 
 See an example `CertificateRequestPolicy` that allows issuance if all `dnsName`s ends with `<namespace>.svc`
 or `<namespace>.svc.cluster.local`:

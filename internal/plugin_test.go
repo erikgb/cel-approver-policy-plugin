@@ -11,9 +11,9 @@ func Test_validatePluginValues(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "no-values"},
-		{name: "valid-value", values: map[string]string{"dnsNames": "has(csr.name)"}},
+		{name: "valid-value", values: map[string]string{"dnsNames": "has(cr.name)"}},
 		{name: "err-invalid-value", values: map[string]string{"dnsNames": "foo"}, wantErr: true},
-		{name: "err-invalid-key", values: map[string]string{"foo": "has(csr.name)"}, wantErr: true},
+		{name: "err-invalid-key", values: map[string]string{"foo": "has(cr.name)"}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

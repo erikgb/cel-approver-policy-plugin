@@ -100,9 +100,9 @@ func (e *CELPlugin) Evaluate(ctx context.Context, crp *v1alpha1.CertificateReque
 // https://github.com/cert-manager/approver-policy/blob/v0.6.3/deploy/charts/approver-policy/templates/webhook.yaml#L22-L52
 // An error returned here will result in failed creation of update of the
 // CertificateRequestPolicy being validated.
-func (e *CELPlugin) Validate(_ context.Context, policy *v1alpha1.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-	e.log.V(5).Info("validating CertificateRequestPolicy", "certificaterequestpolicy", policy.Name)
-	plugin, ok := policy.Spec.Plugins[name]
+func (e *CELPlugin) Validate(_ context.Context, crp *v1alpha1.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+	e.log.V(5).Info("validating CertificateRequestPolicy", "certificaterequestpolicy", crp.Name)
+	plugin, ok := crp.Spec.Plugins[name]
 	if !ok {
 		if e.policyWithNoPluginAllowed {
 			// nothing to do here
@@ -120,6 +120,32 @@ func (e *CELPlugin) Validate(_ context.Context, policy *v1alpha1.CertificateRequ
 	return approver.WebhookValidationResponse{Allowed: true, Errors: nil}, nil
 }
 
+// Ready will be called every time a CertificateRequestPolicy is reconciled in
+// response to events against CertificateRequestPolicy as well as events sent by
+// the plugin via EnqueueChan. CertificateRequestPolicy's Ready status is set
+// depending on the response returned by Ready methods of applicable plugins
+// (including core approver) - if any returns false, Ready status will be false.
+// https://github.com/cert-manager/approver-policy/blob/v0.6.3/pkg/internal/controllers/certificaterequestpolicies.go#L184
+func (e *CELPlugin) Ready(_ context.Context, crp *v1alpha1.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+	e.log.V(5).Info("validating that CertificateRequestPolicy is ready", "certificaterequestpolicy", crp.Name)
+	plugin, ok := crp.Spec.Plugins[name]
+	if !ok {
+		if e.policyWithNoPluginAllowed {
+			// nothing to do here
+			return approver.ReconcilerReadyResponse{Ready: true, Errors: nil}, nil
+		}
+		e := fmt.Errorf("required plugin %s is not defined", name)
+		return approver.ReconcilerReadyResponse{Ready: false, Errors: []*field.Error{field.Required(basePath, e.Error())}}, nil
+	}
+
+	allErrors := validatePluginValues(plugin.Values)
+	if len(allErrors) > 0 {
+		return approver.ReconcilerReadyResponse{Ready: false, Errors: allErrors}, nil
+	}
+
+	return approver.ReconcilerReadyResponse{Ready: true, Errors: nil}, nil
+}
+
 func validatePluginValues(values map[string]string) field.ErrorList {
 	var allErrors field.ErrorList
 	for _, key := range pluginKeys {
@@ -134,44 +160,10 @@ func validatePluginValues(values map[string]string) field.ErrorList {
 		}
 		delete(values, key)
 	}
-	for key, _ := range values {
+	for key := range values {
 		allErrors = append(allErrors, field.NotSupported(basePath, key, pluginKeys))
 	}
 	return allErrors
-}
-
-// Ready will be called every time a CertificateRequestPolicy is reconciled in
-// response to events against CertificateRequestPolicy as well as events sent by
-// the plugin via EnqueueChan. CertificateRequestPolicy's Ready status is set
-// depending on the response returned by Ready methods of applicable plugins
-// (including core approver) - if any returns false, Ready status will be false.
-// https://github.com/cert-manager/approver-policy/blob/v0.6.3/pkg/internal/controllers/certificaterequestpolicies.go#L184
-func (e *CELPlugin) Ready(ctx context.Context, crp *v1alpha1.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-	e.log.V(5).Info("validating that CertificateRequestPolicy is ready", "certificaterequestpolicy", crp.Name)
-	plugin, ok := crp.Spec.Plugins[name]
-	if !ok {
-		if e.policyWithNoPluginAllowed {
-			// nothing to do here
-			return approver.ReconcilerReadyResponse{Ready: true, Errors: nil}, nil
-		}
-		e := fmt.Errorf("required plugin %s is not defined", name)
-		return approver.ReconcilerReadyResponse{Ready: false, Errors: []*field.Error{{Type: field.ErrorTypeNotFound, Field: field.NewPath("spec", name).String()}}}, e
-	}
-	val := plugin.Values[dayKey]
-	if val == "" {
-		e := fmt.Errorf("weekday not specified")
-		return approver.ReconcilerReadyResponse{Ready: false, Errors: []*field.Error{{Type: field.ErrorTypeNotFound, Field: field.NewPath("spec", name, "day").String()}}}, e
-	}
-	d, err := strconv.ParseInt(val, 0, 64)
-	if err != nil {
-		e := fmt.Errorf("invalid weekday value %s, cannot be converted to int", val)
-		return approver.ReconcilerReadyResponse{Ready: false, Errors: []*field.Error{{Type: field.ErrorTypeInvalid, Field: field.NewPath("spec", name, "day").String()}}}, e
-	}
-	if d < 0 || d > 6 {
-		e := fmt.Errorf("invalid weekday %d, days have to be in range from 0 (Sunday) to 6 (Saturday)", d)
-		return approver.ReconcilerReadyResponse{Ready: false, Errors: []*field.Error{{Type: field.ErrorTypeInvalid, Field: field.NewPath("spec", name, "day").String()}}}, e
-	}
-	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
 
 // EnqueueChan returns a channel to which the plugin can send applicable
