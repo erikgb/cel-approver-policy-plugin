@@ -14,6 +14,7 @@ func TestNewValidator(t *testing.T) {
 		{name: "simple-checks", expr: "size(cr.namespace) < 24"},
 		{name: "standard-macros", expr: "[1,2,3].all(i, i % 2 > 0)"},
 		{name: "extended-string-function-library", expr: "self.startsWith('spiffe://trust-domain.com/')"},
+		{name: "doc-example", expr: "['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))"},
 		{name: "err-no-expression", wantErr: true},
 		{name: "err-undeclared-vars", expr: "foo = bar", wantErr: true},
 		{name: "err-must-return-bool", expr: "size('foo')", wantErr: true},

@@ -39,7 +39,7 @@ or `<namespace>.svc.cluster.local`:
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
 metadata:
-  name: tuesday
+  name: cluster-local-service
 spec:
   allowed:
     ... # Be aware that using a plugin does not disable the core approver - a CertificateRequest still has to match the allowed block here even if a plugin is specified
@@ -48,5 +48,16 @@ spec:
   plugins:
     cel-approver-policy-plugin:
       values:
-        dnsNames: self.endsWith('%s.svc'.format([namespace])) || self.endsWith('%s.svc.cluster.local'.format([namespace]))
+        dnsNames: >-
+          ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
 ```
+
+### Writing CEL for this plugin
+
+The plugin has access to the same CEL community libraries as
+[Kubernetes](https://kubernetes.io/docs/reference/using-api/cel/#cel-community-libraries).
+
+The following CEL variables are available:
+
+- `self`: the `string` typed value to validate obtained from the decoded CSR
+- `cr`: a map with selected fields from `CertificateRequest`; currently `namespace` and `name` keys
