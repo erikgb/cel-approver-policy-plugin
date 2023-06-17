@@ -12,7 +12,7 @@ type validator struct {
 	Program    cel.Program
 }
 
-func NewValidator(expression string) (*validator, error) {
+func newValidator(expression string) (*validator, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("self", cel.StringType),
 		cel.Variable("cr", cel.MapType(cel.StringType, cel.StringType)),
@@ -37,4 +37,21 @@ func NewValidator(expression string) (*validator, error) {
 	}
 
 	return &validator{Expression: expression, Program: program}, nil
+}
+
+func (v validator) Validate(val string, cr CertificateRequest) (bool, error) {
+	vars := map[string]interface{}{
+		"self": val,
+		"cr": map[string]string{
+			"namespace": cr.GetNamespace(),
+			"name":      cr.GetName(),
+		},
+	}
+
+	out, _, err := v.Program.Eval(vars)
+	if err != nil {
+		return false, err
+	}
+
+	return out.Value().(bool), nil
 }

@@ -3,9 +3,6 @@ package internal
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
-
 	"github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
 	"github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -15,10 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-const (
-	name   = "cel-approver-policy-plugin"
-	dayKey = "day"
-)
+const name = "cel-approver-policy-plugin"
 
 var (
 	pluginKeys = []string{"dnsNames", "uris"}
@@ -47,7 +41,7 @@ func (e *CELPlugin) RegisterFlags(fs *pflag.FlagSet) {
 
 // Prepare is called once when the approver plugin is being initialized and before the controllers have started.
 // https://github.com/cert-manager/approver-policy/blob/v0.6.3/pkg/internal/cmd/cmd.go#L86
-func (e *CELPlugin) Prepare(ctx context.Context, log logr.Logger, mgr manager.Manager) error {
+func (e *CELPlugin) Prepare(_ context.Context, log logr.Logger, _ manager.Manager) error {
 	e.log = log.WithName(name)
 	// The example plugin does not utilize this channel
 	e.enqueueChan = make(<-chan string)
@@ -65,7 +59,7 @@ func (e *CELPlugin) Prepare(ctx context.Context, log logr.Logger, mgr manager.Ma
 // approver in cert-manager/approver-policy) also return Approved, the
 // CertificateRequst will be approved.
 // https://github.com/cert-manager/approver-policy/blob/v0.6.3/pkg/internal/approver/manager/review.go#L128
-func (e *CELPlugin) Evaluate(ctx context.Context, crp *v1alpha1.CertificateRequestPolicy, cr *v1.CertificateRequest) (approver.EvaluationResponse, error) {
+func (e *CELPlugin) Evaluate(_ context.Context, crp *v1alpha1.CertificateRequestPolicy, cr *v1.CertificateRequest) (approver.EvaluationResponse, error) {
 	e.log.V(5).Info("evaluating CertificateRequest", "certificaterequest", cr.Name, "certificaterequestpolicy", crp.Name)
 	plugin, ok := crp.Spec.Plugins[name]
 	if !ok {
@@ -77,23 +71,19 @@ func (e *CELPlugin) Evaluate(ctx context.Context, crp *v1alpha1.CertificateReque
 		return approver.EvaluationResponse{Result: approver.ResultDenied, Message: msg}, nil
 	}
 
-	val := plugin.Values[dayKey]
-	d, err := strconv.ParseInt(val, 0, 64)
+	req, err := NewCertificateRequest(cr)
 	if err != nil {
-		msg := fmt.Sprintf("Invalid weekday value %s, cannot be converted to int", val)
-		return approver.EvaluationResponse{Result: approver.ResultDenied, Message: msg}, nil
+		return approver.EvaluationResponse{}, err
 	}
-	if d < 0 || d > 6 {
-		msg := fmt.Sprintf("Invalid weekday %d, days have to be in range from 0 (Sunday) to 6 (Saturday)", d)
-		return approver.EvaluationResponse{Result: approver.ResultDenied, Message: msg}, nil
+	allErrors, err := validateCertificateRequest(req, plugin.Values)
+	if err != nil {
+		return approver.EvaluationResponse{}, err
 	}
-	allowedDay := time.Weekday(d)
-	today := time.Now().Weekday()
-	if allowedDay != today {
-		msg := fmt.Sprintf("Issuance only allowed on %s today is %s", allowedDay.String(), today.String())
-		return approver.EvaluationResponse{Result: approver.ResultDenied, Message: msg}, nil
+	if len(allErrors) > 0 {
+		return approver.EvaluationResponse{Result: approver.ResultDenied, Message: allErrors.ToAggregate().Error()}, nil
 	}
-	return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: ""}, nil
+
+	return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
 }
 
 // Validate will be run by the approver-policy's admission webhook.
@@ -117,7 +107,7 @@ func (e *CELPlugin) Validate(_ context.Context, crp *v1alpha1.CertificateRequest
 		return approver.WebhookValidationResponse{Allowed: false, Errors: allErrors}, nil
 	}
 
-	return approver.WebhookValidationResponse{Allowed: true, Errors: nil}, nil
+	return approver.WebhookValidationResponse{Allowed: true}, nil
 }
 
 // Ready will be called every time a CertificateRequestPolicy is reconciled in
@@ -143,22 +133,61 @@ func (e *CELPlugin) Ready(_ context.Context, crp *v1alpha1.CertificateRequestPol
 		return approver.ReconcilerReadyResponse{Ready: false, Errors: allErrors}, nil
 	}
 
-	return approver.ReconcilerReadyResponse{Ready: true, Errors: nil}, nil
+	return approver.ReconcilerReadyResponse{Ready: true}, nil
+}
+
+func validateCertificateRequest(cr CertificateRequest, cpValues map[string]string) (field.ErrorList, error) {
+	var allErrors field.ErrorList
+
+	if expr := cpValues["dnsNames"]; expr != "" {
+		validator, err := newValidator(expr)
+		if err != nil {
+			return nil, err
+		}
+		for i, val := range cr.GetRequest().DNSNames {
+			valid, err := validator.Validate(val, cr)
+			if err != nil {
+				return nil, err
+			}
+			if !valid {
+				e := fmt.Errorf("does not satisfy policy expression %s", expr)
+				allErrors = append(allErrors, field.Invalid(field.NewPath("CSR", "DNSNames").Index(i), val, e.Error()))
+			}
+		}
+	}
+	if expr := cpValues["uris"]; expr != "" {
+		validator, err := newValidator(expr)
+		if err != nil {
+			return nil, err
+		}
+		for i, val := range cr.GetRequest().URIs {
+			valid, err := validator.Validate(val.String(), cr)
+			if err != nil {
+				return nil, err
+			}
+			if !valid {
+				e := fmt.Errorf("does not satisfy policy expression %s", expr)
+				allErrors = append(allErrors, field.Invalid(field.NewPath("CSR", "URIs").Index(i), val, e.Error()))
+			}
+		}
+	}
+
+	return allErrors, nil
 }
 
 func validatePluginValues(values map[string]string) field.ErrorList {
 	var allErrors field.ErrorList
-	for _, key := range pluginKeys {
-		val, ok := values[key]
+	for _, k := range pluginKeys {
+		val, ok := values[k]
 		if !ok {
 			continue
 		}
 		// TODO: Consider caching validators
-		_, err := NewValidator(val)
+		_, err := newValidator(val)
 		if err != nil {
-			allErrors = append(allErrors, field.Invalid(basePath.Child(key), val, err.Error()))
+			allErrors = append(allErrors, field.Invalid(basePath.Child(k), val, err.Error()))
 		}
-		delete(values, key)
+		delete(values, k)
 	}
 	for key := range values {
 		allErrors = append(allErrors, field.NotSupported(basePath, key, pluginKeys))
