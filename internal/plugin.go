@@ -16,8 +16,13 @@ import (
 )
 
 const (
-	name   = "example-approver-policy-plugin"
+	name   = "cel-approver-policy-plugin"
 	dayKey = "day"
+)
+
+var (
+	pluginKeys = []string{"dnsNames", "uris"}
+	basePath   = field.NewPath("spec", "plugins", name)
 )
 
 // CELPlugin is an implementation of approver-policy.Interface
@@ -37,7 +42,7 @@ func (e *CELPlugin) Name() string {
 }
 
 func (e *CELPlugin) RegisterFlags(fs *pflag.FlagSet) {
-	fs.BoolVar(&e.policyWithNoPluginAllowed, "policy-with-no-plugin-allowed", true, "Whether a CertificateRequestPolicy without example-approver-policy plugin should be allowed in the cluster")
+	fs.BoolVar(&e.policyWithNoPluginAllowed, "policy-with-no-plugin-allowed", true, "Whether a CertificateRequestPolicy without cel-approver-policy plugin should be allowed in the cluster")
 }
 
 // Prepare is called once when the approver plugin is being initialized and before the controllers have started.
@@ -50,7 +55,7 @@ func (e *CELPlugin) Prepare(ctx context.Context, log logr.Logger, mgr manager.Ma
 }
 
 // Evaluate will be called when a CertificateRequest is synced with each
-// combination of the CertifiateRequest and an applicable
+// combination of the CertificateRequest and an applicable
 // CertificateRequestPolicy that has this plugin enabled.
 // For any combination:
 // - If Evaluate returns an error, the CertificateRequest will not be denied or
@@ -71,6 +76,7 @@ func (e *CELPlugin) Evaluate(ctx context.Context, crp *v1alpha1.CertificateReque
 		msg := fmt.Sprintf("required plugin %s is not defined", name)
 		return approver.EvaluationResponse{Result: approver.ResultDenied, Message: msg}, nil
 	}
+
 	val := plugin.Values[dayKey]
 	d, err := strconv.ParseInt(val, 0, 64)
 	if err != nil {
@@ -94,7 +100,7 @@ func (e *CELPlugin) Evaluate(ctx context.Context, crp *v1alpha1.CertificateReque
 // https://github.com/cert-manager/approver-policy/blob/v0.6.3/deploy/charts/approver-policy/templates/webhook.yaml#L22-L52
 // An error returned here will result in failed creation of update of the
 // CertificateRequestPolicy being validated.
-func (e *CELPlugin) Validate(ctx context.Context, policy *v1alpha1.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+func (e *CELPlugin) Validate(_ context.Context, policy *v1alpha1.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 	e.log.V(5).Info("validating CertificateRequestPolicy", "certificaterequestpolicy", policy.Name)
 	plugin, ok := policy.Spec.Plugins[name]
 	if !ok {
@@ -103,24 +109,35 @@ func (e *CELPlugin) Validate(ctx context.Context, policy *v1alpha1.CertificateRe
 			return approver.WebhookValidationResponse{Allowed: true, Errors: nil}, nil
 		}
 		e := fmt.Errorf("required plugin %s is not defined", name)
-		return approver.WebhookValidationResponse{Allowed: false, Errors: []*field.Error{{Type: field.ErrorTypeNotFound, Field: field.NewPath("spec", name).String()}}}, e
+		return approver.WebhookValidationResponse{Allowed: false, Errors: []*field.Error{field.Required(basePath, e.Error())}}, nil
 	}
-	val := plugin.Values[dayKey]
-	if val == "" {
-		e := fmt.Errorf("weekday not specified")
-		return approver.WebhookValidationResponse{Allowed: false, Errors: []*field.Error{{Type: field.ErrorTypeNotFound, Field: field.NewPath("spec", name, "day").String()}}}, e
-	}
-	d, err := strconv.ParseInt(val, 0, 64)
-	if err != nil {
-		e := fmt.Errorf("invalid weekday value %s, cannot be converted to int", val)
-		return approver.WebhookValidationResponse{Allowed: false, Errors: []*field.Error{{Type: field.ErrorTypeInvalid, Field: field.NewPath("spec", name, "day").String()}}}, e
-	}
-	if d < 0 || d > 6 {
-		e := fmt.Errorf("invalid weekday %d, days have to be in range from 0 (Sunday) to 6 (Saturday)", d)
-		return approver.WebhookValidationResponse{Allowed: false, Errors: []*field.Error{{Type: field.ErrorTypeInvalid, Field: field.NewPath("spec", name, "day").String()}}}, e
+
+	allErrors := validatePluginValues(plugin.Values)
+	if len(allErrors) > 0 {
+		return approver.WebhookValidationResponse{Allowed: false, Errors: allErrors}, nil
 	}
 
 	return approver.WebhookValidationResponse{Allowed: true, Errors: nil}, nil
+}
+
+func validatePluginValues(values map[string]string) field.ErrorList {
+	var allErrors field.ErrorList
+	for _, key := range pluginKeys {
+		val, ok := values[key]
+		if !ok {
+			continue
+		}
+		// TODO: Consider caching validators
+		_, err := NewValidator(val)
+		if err != nil {
+			allErrors = append(allErrors, field.Invalid(basePath.Child(key), val, err.Error()))
+		}
+		delete(values, key)
+	}
+	for key, _ := range values {
+		allErrors = append(allErrors, field.NotSupported(basePath, key, pluginKeys))
+	}
+	return allErrors
 }
 
 // Ready will be called every time a CertificateRequestPolicy is reconciled in
