@@ -20,5 +20,21 @@ fmt: ## Run go fmt against code.
 	go fmt ./...
 
 .PHONY: test
-test: ## Run tests.
+test: ## Run go tests.
 	go test -v -race ./... -coverprofile cover.out
+
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+## Tool Binaries
+GOIMPORTS ?= $(LOCALBIN)/goimports
+
+## Tool Versions
+GOIMPORTS_VERSION ?= v0.10.0
+
+.PHONY: goimports
+goimports: $(GOIMPORTS) ## Download goimports locally if necessary.
+$(GOIMPORTS):
+	test -s $(LOCALBIN)/goimports || GOBIN=$(LOCALBIN) go install golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION)

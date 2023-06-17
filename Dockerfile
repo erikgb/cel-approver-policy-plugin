@@ -9,6 +9,7 @@ COPY go.sum go.sum
 
 # Copy the go source files
 COPY cmd/ cmd/
+COPY internal/ internal/
 
 # Build
 RUN go build -o cert-manager-csi-approver-policy-plugin cmd/main.go
