@@ -1,4 +1,4 @@
-VERSION ?= dev
+IMG ?= "registry.dummy-domain.com/cert-manager-csi-approver-policy-plugin:dev"
 
 .PHONY: help
 help: ## Display this help.
@@ -7,7 +7,7 @@ help: ## Display this help.
 .PHONY: image
 image: ## Build approver-policy + cel plugin image.
 	docker build \
-	  -t cert-manager-csi-approver-policy-plugin:$(VERSION) \
+	  -t $(IMG) \
 	  --build-arg GOPROXY=${GOPROXY} \
 	  .
 
