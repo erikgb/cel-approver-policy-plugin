@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/ext"
 	"reflect"
 )
 
@@ -14,8 +15,8 @@ type validator struct {
 func NewValidator(expression string) (*validator, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("self", cel.StringType),
-		cel.Variable("name", cel.StringType),
-		cel.Variable("namespace", cel.StringType),
+		cel.Variable("csr", cel.MapType(cel.StringType, cel.StringType)),
+		ext.Strings(),
 	)
 	if err != nil {
 		return nil, err
