@@ -1,38 +1,27 @@
 # cel-approver-policy-plugin
 
 This repo contains an experimental CEL
-[cert-manager/approver-policy plugin](https://cert-manager.io/docs/projects/approver-policy/#plugins).
+[cert-manager/approver-policy plugin](https://cert-manager.io/docs/projects/approver-policy/#plugins)
+that allows to specify CEL expressions used to decide if `CertificateRequest`s can be approved
 
+## Installation
 
-> :warning:  This is plugin is not meant to actually be used. This repo does not contain best-practices, production
-> ready code.
+[Plugins](https://cert-manager.io/docs/projects/approver-policy/#plugins) are external approvers that are built
+into [approver-policy](https://cert-manager.io/docs/projects/approver-policy/) at compile time.
 
-## Implementing a custom approver plugin
+To install approver-policy with cel-approver-policy-plugin follow the
+[approver-policy installation instructions](https://cert-manager.io/docs/projects/approver-policy/#installation),
+but replace the default approver-policy image with an image from this project.
 
-[cert-manager/approver-policy](https://cert-manager.io/docs/projects/approver-policy/) can be extended via a plugin
-mechanism where a custom plugin can be written with specific logic for evaluating `CertificateRequest`s and
-`CertificateRequestPolicy`s. This can then be registered with the core cert-manager/approver-policy (in Go code)
-and a single image can be built that will have both the core approver and the custom plugin.
+All commits on the default branch will push to `ghcr.io/erikgb/cel-approver-policy-plugin:main`.
 
-The approximate flow when writing an approver-policy plugin (that this sample implementation follows):
+Supported "extra" flags:
 
-- implement the [`cert-manager/approver-policy.Interface`](https://github.com/cert-manager/approver-policy/blob/v0.6.3/pkg/approver/approver.go#L27-L53).
-  This should contain all the logic of the new plugin for evaluating `CertificateRequest`s and `CertificateRequestPolicy`s.
+- `policy-with-no-plugin-allowed`: Whether a CertificateRequestPolicy without cel-approver-policy plugin should be allowed in the cluster
 
-- ensure that the implementation of `approver-policy.Interface` is registered with
-  [the global approver registry shared with core approver](https://github.com/cert-manager/approver-policy/blob/v0.6.3/pkg/registry/registry.go#L28)
+## Usage
 
-- build a single Go binary that contains the custom plugin(s) that you wish to use as well as the upstream approver-policy.
-  The entrypoint should be [root command of approver-policy](https://github.com/cert-manager/approver-policy/blob/v0.6.3/cmd/main.go#L24)
-
-- package the whole project using your favourite packaging mechanism.
-
-## CEL plugin
-
-This repo contains an experimental plugin `cel-approver-policy-plugin` that allows to specify CEL expressions
-used to decide if `CertificateRequest`s can be approved.
-
-See an example `CertificateRequestPolicy` that allows issuance if all `dnsName`s ends with `<namespace>.svc`
+Example `CertificateRequestPolicy` that allows issuance if all `dnsName`s ends with `<namespace>.svc`
 or `<namespace>.svc.cluster.local`:
 
 ```yaml
@@ -52,12 +41,16 @@ spec:
           ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
 ```
 
-### Writing CEL for this plugin
+### Writing CEL expressions for this plugin
 
 The plugin has access to the same CEL community libraries as
-[Kubernetes](https://kubernetes.io/docs/reference/using-api/cel/#cel-community-libraries).
+[Kubernetes](https://kubernetes.io/docs/reference/using-api/cel/#cel-community-libraries):
 
-The following CEL variables are available:
+- CEL standard functions, defined in the [list of standard definitions](https://github.com/google/cel-spec/blob/master/doc/langdef.md#list-of-standard-definitions)
+- CEL standard [macros](https://github.com/google/cel-spec/blob/v0.7.0/doc/langdef.md#macros)
+- CEL [extended string function library](https://pkg.go.dev/github.com/google/cel-go/ext#Strings)
+
+The following CEL variables are available to use in expressions:
 
 - `self`: the `string` typed value to validate obtained from the decoded CSR
-- `cr`: a map with selected fields from `CertificateRequest`; currently `namespace` and `name` keys
+- `cr`: a `map` with selected fields from `CertificateRequest`; currently `namespace` and `name` keys
