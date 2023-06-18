@@ -12,13 +12,13 @@ COPY cmd/ cmd/
 COPY internal/ internal/
 
 # Build
-RUN go build -o cert-manager-cel-approver-policy-plugin cmd/main.go
+RUN CGO_ENABLED=0 go build -o cert-manager-cel-approver-policy-plugin cmd/main.go
 
 FROM gcr.io/distroless/static:nonroot
 LABEL description="Experimental CEL cert-manager approver-policy plugin"
 
 WORKDIR /
-USER 65532:65532
-COPY --from=builder /workspace/cert-manager-cel-approver-policy-plugin /usr/bin/cert-manager-approver-policy
+COPY --from=builder --chown=nonroot:nonroot /workspace/cert-manager-cel-approver-policy-plugin /usr/bin/cert-manager-approver-policy
+USER nonroot
 
 ENTRYPOINT ["/usr/bin/cert-manager-approver-policy"]
