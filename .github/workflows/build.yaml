@@ -20,4 +20,4 @@ jobs:
         uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
-          args: build --snapshot --clean
+          args: build --snapshot --single-target --clean
