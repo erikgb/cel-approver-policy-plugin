@@ -140,7 +140,8 @@ func validateCertificateRequest(cr CertificateRequest, cpValues map[string]strin
 	var allErrors field.ErrorList
 
 	if expr := cpValues["dnsNames"]; expr != "" {
-		validator, err := newValidator(expr)
+		validator := &Validator{Expression: expr}
+		err := validator.Compile()
 		if err != nil {
 			return nil, err
 		}
@@ -156,7 +157,8 @@ func validateCertificateRequest(cr CertificateRequest, cpValues map[string]strin
 		}
 	}
 	if expr := cpValues["uris"]; expr != "" {
-		validator, err := newValidator(expr)
+		validator := &Validator{Expression: expr}
+		err := validator.Compile()
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +185,8 @@ func validatePluginValues(values map[string]string) field.ErrorList {
 			continue
 		}
 		// TODO: Consider caching validators
-		_, err := newValidator(val)
+		validator := &Validator{Expression: val}
+		err := validator.Compile()
 		if err != nil {
 			allErrors = append(allErrors, field.Invalid(basePath.Child(k), val, err.Error()))
 		}

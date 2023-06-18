@@ -1,45 +1,46 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/ext"
 	"reflect"
 )
 
-type validator struct {
+type Validator struct {
 	Expression string
 	Program    cel.Program
 }
 
-func newValidator(expression string) (*validator, error) {
+func (v *Validator) Compile() error {
 	env, err := cel.NewEnv(
 		cel.Variable("self", cel.StringType),
 		cel.Variable("cr", cel.MapType(cel.StringType, cel.StringType)),
 		ext.Strings(),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	ast, iss := env.Compile(expression)
+	ast, iss := env.Compile(v.Expression)
 	if iss.Err() != nil {
-		return nil, iss.Err()
+		return iss.Err()
 	}
 	if !reflect.DeepEqual(ast.OutputType(), cel.BoolType) {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"got %v, wanted %v result type", ast.OutputType(), cel.BoolType)
 	}
 
-	program, err := env.Program(ast)
-	if err != nil {
-		return nil, err
-	}
-
-	return &validator{Expression: expression, Program: program}, nil
+	v.Program, err = env.Program(ast)
+	return err
 }
 
-func (v validator) Validate(val string, cr CertificateRequest) (bool, error) {
+func (v *Validator) Validate(val string, cr CertificateRequest) (bool, error) {
+	if v.Program == nil {
+		return false, errors.New("must compile first")
+	}
+
 	vars := map[string]interface{}{
 		"self": val,
 		"cr": map[string]string{

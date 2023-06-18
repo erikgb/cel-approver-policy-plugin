@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestNewValidator(t *testing.T) {
+func Test_Validator_Compile(t *testing.T) {
 	tests := []struct {
 		name    string
 		expr    string
@@ -21,19 +21,21 @@ func TestNewValidator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := newValidator(tt.expr)
+			v := &Validator{Expression: tt.expr}
+			err := v.Compile()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("newValidator() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Compile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 		})
 	}
 }
 
-func Test_validator_Validate(t *testing.T) {
-	v, err := newValidator("self.startsWith('spiffe://acme.com/ns/%s/sa/'.format([cr.namespace]))")
+func Test_Validator_Validate(t *testing.T) {
+	v := &Validator{Expression: "self.startsWith('spiffe://acme.com/ns/%s/sa/'.format([cr.namespace]))"}
+	err := v.Compile()
 	if err != nil {
-		t.Errorf("newValidator() error = %v", err)
+		t.Errorf("Compile() error = %v", err)
 	}
 
 	type args struct {
