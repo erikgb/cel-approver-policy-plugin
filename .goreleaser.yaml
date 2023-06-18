@@ -22,6 +22,9 @@ archives:
       format: zip
 checksum:
   name_template: 'checksums.txt'
+dockers:
+  - image_templates:
+      - erikgb/cel-approver-policy-plugin
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 changelog:

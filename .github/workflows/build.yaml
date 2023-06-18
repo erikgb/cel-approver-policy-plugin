@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  packages: write
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -23,3 +26,5 @@ jobs:
         with:
           version: latest
           args: build --snapshot --single-target --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
