@@ -1,4 +1,4 @@
-IMG ?= "registry.dummy-domain.com/cert-manager-csi-approver-policy-plugin:dev"
+IMG ?= "registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin:dev"
 
 .PHONY: help
 help: ## Display this help.
