@@ -24,3 +24,5 @@ go.work
 
 # Local binaries
 /bin/
+
+dist/
