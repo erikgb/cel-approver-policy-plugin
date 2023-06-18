@@ -2,10 +2,33 @@ package internal
 
 import (
 	"crypto/x509"
+	"fmt"
 	v1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
 )
 
+type CSRAttribute string
+
+const (
+	CSRAttrDNSNames CSRAttribute = "DNSNames"
+	CSRAttrURIs     CSRAttribute = "URIs"
+)
+
+func (a CSRAttribute) GetValues(cr CertificateRequest) []string {
+	switch a {
+	case CSRAttrDNSNames:
+		return cr.GetRequest().DNSNames
+	case CSRAttrURIs:
+		var uris []string
+		for _, uri := range cr.GetRequest().URIs {
+			uris = append(uris, uri.String())
+		}
+		return uris
+	}
+	panic(fmt.Errorf("no values accessor defined for '%v' CSRAttribute", a))
+}
+
+// CertificateRequest is an interface to allow for easier testing
 type CertificateRequest interface {
 	GetRequest() *x509.CertificateRequest
 	GetNamespace() string

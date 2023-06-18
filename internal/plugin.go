@@ -8,6 +8,7 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/go-logr/logr"
 	"github.com/spf13/pflag"
+	"golang.org/x/exp/maps"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -15,8 +16,8 @@ import (
 const name = "cel-approver-policy-plugin"
 
 var (
-	pluginKeys = []string{"dnsNames", "uris"}
-	basePath   = field.NewPath("spec", "plugins", name)
+	valueKeys = map[string]CSRAttribute{"dnsNames": CSRAttrDNSNames, "uris": CSRAttrURIs}
+	basePath  = field.NewPath("spec", "plugins", name)
 )
 
 // CELPlugin is an implementation of approver-policy.Interface
@@ -139,39 +140,28 @@ func (e *CELPlugin) Ready(_ context.Context, crp *v1alpha1.CertificateRequestPol
 func validateCertificateRequest(cr CertificateRequest, cpValues map[string]string) (field.ErrorList, error) {
 	var allErrors field.ErrorList
 
-	if expr := cpValues["dnsNames"]; expr != "" {
+	for k, attr := range valueKeys {
+		expr, ok := cpValues[k]
+		if !ok {
+			continue
+		}
 		validator := &Validator{Expression: expr}
+		// TODO: Consider caching compiled validators
 		err := validator.Compile()
 		if err != nil {
 			return nil, err
 		}
-		for i, val := range cr.GetRequest().DNSNames {
+		for i, val := range attr.GetValues(cr) {
 			valid, err := validator.Validate(val, cr)
 			if err != nil {
 				return nil, err
 			}
 			if !valid {
 				e := fmt.Errorf("does not satisfy policy expression %s", expr)
-				allErrors = append(allErrors, field.Invalid(field.NewPath("CSR", "DNSNames").Index(i), val, e.Error()))
+				allErrors = append(allErrors, field.Invalid(field.NewPath("CSR", string(attr)).Index(i), val, e.Error()))
 			}
 		}
-	}
-	if expr := cpValues["uris"]; expr != "" {
-		validator := &Validator{Expression: expr}
-		err := validator.Compile()
-		if err != nil {
-			return nil, err
-		}
-		for i, val := range cr.GetRequest().URIs {
-			valid, err := validator.Validate(val.String(), cr)
-			if err != nil {
-				return nil, err
-			}
-			if !valid {
-				e := fmt.Errorf("does not satisfy policy expression %s", expr)
-				allErrors = append(allErrors, field.Invalid(field.NewPath("CSR", "URIs").Index(i), val, e.Error()))
-			}
-		}
+
 	}
 
 	return allErrors, nil
@@ -179,21 +169,22 @@ func validateCertificateRequest(cr CertificateRequest, cpValues map[string]strin
 
 func validatePluginValues(values map[string]string) field.ErrorList {
 	var allErrors field.ErrorList
-	for _, k := range pluginKeys {
-		val, ok := values[k]
+	for k := range valueKeys {
+		expr, ok := values[k]
 		if !ok {
 			continue
 		}
-		// TODO: Consider caching validators
-		validator := &Validator{Expression: val}
+		validator := &Validator{Expression: expr}
+		// TODO: Consider caching compiled validators
 		err := validator.Compile()
 		if err != nil {
-			allErrors = append(allErrors, field.Invalid(basePath.Child(k), val, err.Error()))
+			allErrors = append(allErrors, field.Invalid(basePath.Child(k), expr, err.Error()))
 		}
+		// delete processed key to validate for unsupported keys afterwards
 		delete(values, k)
 	}
 	for key := range values {
-		allErrors = append(allErrors, field.NotSupported(basePath, key, pluginKeys))
+		allErrors = append(allErrors, field.NotSupported(basePath, key, maps.Keys(valueKeys)))
 	}
 	return allErrors
 }
