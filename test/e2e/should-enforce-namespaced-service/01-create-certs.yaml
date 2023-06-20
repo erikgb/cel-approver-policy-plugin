@@ -33,13 +33,3 @@ spec:
     kind: Issuer
     name: selfsigned
   secretName: rejected-cert
----
-apiVersion: kuttl.dev/v1beta1
-kind: TestStep
-timeout: 60
-collectors:
-  - command: kubectl get pods -n cert-manager -o yaml
-  - type: events
-    namespace: cert-manager
-  - selector: app.kubernetes.io/name=cert-manager-approver-policy
-    namespace: cert-manager
