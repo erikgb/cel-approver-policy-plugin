@@ -1,0 +1,30 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: approved
+status:
+  conditions:
+    - message: Certificate is up to date and has not expired
+      reason: Ready
+      status: 'True'
+      type: Ready
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rejected
+status:
+  conditions:
+    - message: Issuing certificate as Secret does not exist
+      reason: DoesNotExist
+      status: 'False'
+      type: Ready
+    - message: >-
+        The certificate request has failed to complete and will be retried: No
+        policy approved this request: [internal-service:
+        spec.allowed.dnsNames.values: Invalid value: []string{"foo.bar"}: *.svc,
+        *.svc.cluster.local]
+      reason: policy.cert-manager.io
+      status: 'False'
+      type: Issuing

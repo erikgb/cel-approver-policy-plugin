@@ -86,4 +86,4 @@ jobs:
           cache: enable
       - run: |
           kubectl kuttl version
-          kubectl kuttl test ./test/e2e/
+          kubectl kuttl test

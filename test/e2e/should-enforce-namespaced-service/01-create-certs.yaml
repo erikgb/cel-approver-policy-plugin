@@ -1,0 +1,36 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: approved
+spec:
+  # DNSNames are according to policy (same namespace)
+  dnsNames:
+    - server.cel-plugin-test.svc
+    - server.cel-plugin-test.svc.cluster.local
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: selfsigned
+  secretName: approved-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rejected
+spec:
+  # DNSNames are NOT according to policy (wrong namespace)
+  dnsNames:
+    - server.other-namespace.svc.cluster.local
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: selfsigned
+  secretName: rejected-cert
