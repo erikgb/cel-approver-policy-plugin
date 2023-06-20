@@ -83,12 +83,14 @@ jobs:
             --set installCRDs=true \
             --set extraArgs={--controllers='*\,-certificaterequests-approver'} \
             --wait
+            --timeout 1m
           helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy \
             --install \
             --namespace cert-manager \
             --set image.repository="registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin" \
             --set image.tag=dev \
             --wait
+            --timeout 1m
       - name: Run tests
         run: |
           kubectl kuttl test
