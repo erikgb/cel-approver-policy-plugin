@@ -1,9 +1,0 @@
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: cert
-spec:
-  # DNS name is NOT according to policy (other namespace)
-  dnsNames:
-    - server.other-namespace.svc.cluster.local
