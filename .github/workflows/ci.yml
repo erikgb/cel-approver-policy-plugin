@@ -76,8 +76,6 @@ jobs:
           helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy \
             --install \
             --namespace cert-manager \
-            --set image.repository=${{ env.IMG_REPO }} \
-            --set image.tag=${{ env.IMG_TAG }} \
             --wait
       - run: |
           kubectl krew install kuttl
