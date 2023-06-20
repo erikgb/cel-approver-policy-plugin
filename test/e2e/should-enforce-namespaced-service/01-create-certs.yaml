@@ -37,5 +37,9 @@ spec:
 ---
 apiVersion: kuttl.dev/v1beta1
 kind: TestStep
-# Slightly increase timeout to allow approved certificates to be processed
-timeout: 60
+# increase timeout to allow certificates to be processed
+timeout: 120
+collectors:
+  - type: events
+  - type: events
+    namespace: cert-manager
