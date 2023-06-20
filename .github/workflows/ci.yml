@@ -71,7 +71,7 @@ jobs:
             --set installCRDs=true \
             --set extraArgs={--controllers='*\,-certificaterequests-approver'} \
             --wait
-          helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy |
+          helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy \
             --install \
             --namespace cert-manager \
             --set image.repository=${{ env.IMG }} \
