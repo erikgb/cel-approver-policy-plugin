@@ -77,8 +77,11 @@ jobs:
             --install \
             --namespace cert-manager \
             --wait
+      - uses: jaxxstorm/action-install-gh-release@v1
+        with:
+          repo: kudobuilder/kuttl
+          tag: v0.15.0
+          cache: enable
       - run: |
-          kubectl krew install kuttl
           kubectl kuttl version
-      - run: |
           kubectl kuttl test ./test/e2e/
