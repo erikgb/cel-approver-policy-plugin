@@ -78,8 +78,10 @@ jobs:
             --namespace cert-manager \
             --set image.repository=registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin \
             --set image.tag=dev \
-            --set image.pullPolicy=Never \
-            --wait
+            --set image.pullPolicy=Never
+          kubectl rollout status deployment/cert-manager-approver-policy -n cert-manager --timeout=10s
+          kubectl get deployment/cert-manager-approver-policy -n cert-manager -o yaml
+          kubectl get events -n cert-manager
       - uses: jaxxstorm/action-install-gh-release@v1
         with:
           repo: kudobuilder/kuttl
