@@ -39,6 +39,7 @@ jobs:
   e2e-test:
     runs-on: ubuntu-latest
     env:
+      CLUSTER_NAME: k3s-cel-approver-policy-plugin
       IMG: registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin:dev
       IMG_FILE: cel-approver-policy-plugin-image.tar
     steps:
@@ -54,9 +55,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - uses: AbsaOSS/k3d-action@v2
+        with:
+          cluster-name: ${{ env.CLUSTER_NAME }}
       - run: |
           kubectl cluster-info
           kubectl version --output=yaml
       - run: |
-          k3d image import ${{ env.IMG_FILE }}
+          k3d image import ${{ env.IMG_FILE }} --cluster ${{ env.CLUSTER_NAME }}
           helm version
