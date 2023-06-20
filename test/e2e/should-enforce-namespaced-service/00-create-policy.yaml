@@ -8,11 +8,11 @@ spec:
     dnsNames:
       values:
         - "*"
-#  plugins:
-#    cel-approver-policy-plugin:
-#      values:
-#        dnsNames: >-
-#          ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
+  plugins:
+    cel-approver-policy-plugin:
+      values:
+        dnsNames: >-
+          ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
   selector:
     issuerRef: {}
 ---
