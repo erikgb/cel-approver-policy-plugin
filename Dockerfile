@@ -14,11 +14,11 @@ COPY internal/ internal/
 # Build
 RUN CGO_ENABLED=0 go build -o cert-manager-cel-approver-policy-plugin cmd/main.go
 
-FROM gcr.io/distroless/static:nonroot
+FROM gcr.io/distroless/static:latest
 LABEL description="Experimental CEL cert-manager approver-policy plugin"
 
 WORKDIR /
-COPY --from=builder --chown=nonroot:nonroot /workspace/cert-manager-cel-approver-policy-plugin /usr/bin/cert-manager-approver-policy
-USER nonroot
+USER 1001
+COPY --from=builder /workspace/cert-manager-cel-approver-policy-plugin /usr/bin/cert-manager-approver-policy
 
 ENTRYPOINT ["/usr/bin/cert-manager-approver-policy"]
