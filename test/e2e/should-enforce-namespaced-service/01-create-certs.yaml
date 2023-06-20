@@ -34,3 +34,8 @@ spec:
     kind: Issuer
     name: selfsigned
   secretName: rejected-cert
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+# Slightly increase timeout to allow approved certificates to be processed
+timeout: 60
