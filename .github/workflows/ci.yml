@@ -40,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CLUSTER_NAME: k3s-cel-approver-policy-plugin
-      IMG: ${{ env.IMG_REPO + ':' + env.IMG_TAG }}
       IMG_REPO: registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin
       IMG_TAG: dev
       IMG_FILE: cel-approver-policy-plugin.tar
+      IMG: ${{ env.IMG_REPO + ':' + env.IMG_TAG }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
