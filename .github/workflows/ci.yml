@@ -36,3 +36,27 @@ jobs:
           go-version-file: go.mod
       - name: Run tests
         run: make test
+  e2e-test:
+    runs-on: ubuntu-latest
+    env:
+      IMG: registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin:dev
+      IMG_FILE: cel-approver-policy-plugin-image.tar
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/build-push-action@v4
+        with:
+          context: .
+          outputs: type=docker,dest=${{ env.IMG_FILE }}
+          tags: ${{ env.IMG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: AbsaOSS/k3d-action@v2
+      - run: |
+          kubectl cluster-info
+          kubectl version --output=yaml
+      - run: |
+          k3d image import ${{ env.IMG_FILE }}
+          helm version
