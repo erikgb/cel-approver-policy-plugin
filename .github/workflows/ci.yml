@@ -76,6 +76,7 @@ jobs:
             --namespace cert-manager \
             --set image.repository=registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin \
             --set image.tag=dev \
+            --set image.pullPolicy=Never \
             --wait
       - uses: jaxxstorm/action-install-gh-release@v1
         with:
