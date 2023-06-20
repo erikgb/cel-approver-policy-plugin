@@ -76,3 +76,6 @@ jobs:
             --namespace cert-manager \
             --set image.repository=${{ env.IMG }} \
             --wait
+      - run: |
+          kubectl krew install kuttl
+          kubectl kuttl version
