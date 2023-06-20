@@ -2,7 +2,7 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: approved
+  name: cert
 status:
   conditions:
     - status: 'True'
