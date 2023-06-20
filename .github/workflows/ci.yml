@@ -70,3 +70,9 @@ jobs:
             --namespace cert-manager \
             --set installCRDs=true \
             --set extraArgs={--controllers='*\,-certificaterequests-approver'} # Disable cert-manager's built-in approver
+            --wait
+          helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy |
+            --install \
+            --namespace cert-manager \
+            --set image.repository=${{ env.IMG }} \
+            --wait
