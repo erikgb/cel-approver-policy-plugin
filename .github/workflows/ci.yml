@@ -41,8 +41,6 @@ jobs:
     env:
       CLUSTER_NAME: k3s-cel-approver-policy-plugin
       IMG: registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin:dev
-      IMG_REPO: registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin
-      IMG_TAG: dev
       IMG_FILE: cel-approver-policy-plugin.tar
     steps:
       - name: Checkout
@@ -76,6 +74,8 @@ jobs:
           helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy \
             --install \
             --namespace cert-manager \
+            --set image.repository=registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin \
+            --set image.tag=dev \
             --wait
       - uses: jaxxstorm/action-install-gh-release@v1
         with:
