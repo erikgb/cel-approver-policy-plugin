@@ -60,6 +60,13 @@ jobs:
       - run: |
           kubectl cluster-info
           kubectl version --output=yaml
+          helm version
       - run: |
           k3d image import ${{ env.IMG_FILE }} --cluster ${{ env.CLUSTER_NAME }}
-          helm version
+          helm repo add jetstack https://charts.jetstack.io
+          helm upgrade cert-manager jetstack/cert-manager \
+            --install \
+            --create-namespace \
+            --namespace cert-manager \
+            --set installCRDs=true \
+            --set extraArgs={--controllers='*\,-certificaterequests-approver'} # Disable cert-manager's built-in approver
