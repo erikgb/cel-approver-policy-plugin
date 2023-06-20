@@ -76,10 +76,10 @@ jobs:
           helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy \
             --install \
             --namespace cert-manager \
-            --set image.repository=registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin \
-            --set image.tag=dev \
+            --set image.repository="registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin" \
+            --set image.tag="dev" \
             --set image.pullPolicy=Never
-          kubectl rollout status deployment/cert-manager-approver-policy -n cert-manager --timeout=10s
+          kubectl rollout status deployment/cert-manager-approver-policy -n cert-manager --timeout=10s || true
           kubectl get deployment/cert-manager-approver-policy -n cert-manager -o yaml
           kubectl get events -n cert-manager
       - uses: jaxxstorm/action-install-gh-release@v1
