@@ -40,8 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CLUSTER_NAME: k3s-cel-approver-policy-plugin
-      IMG: registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin:dev
-      IMG_FILE: cel-approver-policy-plugin-image.tar
+      IMG: ${{ env.IMG_REPO + ':' + env.IMG_TAG }}
+      IMG_REPO: registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin
+      IMG_TAG: dev
+      IMG_FILE: cel-approver-policy-plugin.tar
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -74,8 +76,11 @@ jobs:
           helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy \
             --install \
             --namespace cert-manager \
-            --set image.repository=${{ env.IMG }} \
+            --set image.repository=${{ env.IMG_REPO }} \
+            --set image.tag=${{ env.IMG_TAG }} \
             --wait
       - run: |
           kubectl krew install kuttl
           kubectl kuttl version
+      - run: |
+          kubectl kuttl test ./test/e2e/

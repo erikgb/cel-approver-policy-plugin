@@ -1,0 +1,21 @@
+---
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: internal-namespaced-service
+spec:
+  plugins:
+    cel-approver-policy-plugin:
+      values:
+        dnsNames: >-
+          ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
+  selector:
+    issuerRef: {}
+status:
+  conditions:
+    - lastTransitionTime: '2023-06-20T06:51:11Z'
+      message: CertificateRequestPolicy is ready for approval evaluation
+      observedGeneration: 1
+      reason: Ready
+      status: 'True'
+      type: Ready
