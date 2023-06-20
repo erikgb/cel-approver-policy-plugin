@@ -56,7 +56,9 @@ jobs:
           cache-to: type=gha,mode=max
       - uses: AbsaOSS/k3d-action@v2
         with:
+          k3d-version: v5.5.1
           cluster-name: ${{ env.CLUSTER_NAME }}
+          args: --image docker.io/rancher/k3s:v1.27.2-k3s1
       - run: |
           kubectl cluster-info
           kubectl version --output=yaml
