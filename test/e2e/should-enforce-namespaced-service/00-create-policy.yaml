@@ -15,3 +15,32 @@ spec:
 #          ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
   selector:
     issuerRef: {}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager-policy:certificates
+rules:
+  - apiGroups:
+      - policy.cert-manager.io
+    resources:
+      - certificaterequestpolicies
+    verbs:
+      - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-policy:certificates
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-policy:certificates
+subjects:
+  # The users who should be bound to the policies defined.
+  # Note that in the case of users creating Certificate resources, cert-manager
+  # is the entity that is creating the actual CertificateRequests, and so the
+  # cert-manager controller's Service Account should be bound.
+  - kind: ServiceAccount
+    name: cert-manager
+    namespace: cert-manager
