@@ -36,3 +36,59 @@ jobs:
           go-version-file: go.mod
       - name: Run tests
         run: make test
+  e2e-test:
+    runs-on: ubuntu-latest
+    env:
+      CLUSTER_NAME: k3s-cel-approver-policy-plugin
+      IMG: registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin:dev
+      IMG_FILE: cel-approver-policy-plugin.tar
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/build-push-action@v4
+        with:
+          context: .
+          outputs: type=docker,dest=${{ env.IMG_FILE }}
+          tags: ${{ env.IMG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Start cluster
+        uses: AbsaOSS/k3d-action@v2
+        with:
+          k3d-version: v5.5.1
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          args: --image docker.io/rancher/k3s:v1.27.2-k3s1
+      - name: Install KUTTL
+        uses: jaxxstorm/action-install-gh-release@v1
+        with:
+          repo: kudobuilder/kuttl
+          tag: v0.15.0
+          cache: enable
+      - name: Show tools version info
+        run: |
+          kubectl cluster-info
+          kubectl version --output=yaml
+          kubectl kuttl version
+          helm version
+      - name: Deploy
+        run: |
+          k3d image import ${{ env.IMG_FILE }} --cluster ${{ env.CLUSTER_NAME }}
+          helm repo add jetstack https://charts.jetstack.io
+          helm upgrade cert-manager jetstack/cert-manager \
+            --install \
+            --create-namespace \
+            --namespace cert-manager \
+            --set installCRDs=true \
+            --set extraArgs={--controllers='*\,-certificaterequests-approver'} \
+            --wait --timeout 1m
+          helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy \
+            --install \
+            --namespace cert-manager \
+            --set image.repository="registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin" \
+            --set image.tag=dev \
+            --wait --timeout 1m
+      - name: Run tests
+        run: |
+          kubectl kuttl test

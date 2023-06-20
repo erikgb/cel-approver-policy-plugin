@@ -39,14 +39,18 @@ metadata:
   name: cluster-local-service
 spec:
   allowed:
-    ... # Be aware that using a plugin does not disable the core approver - a CertificateRequest still has to match the allowed block here even if a plugin is specified
-  selector:
-   ...
+    # Be aware that using a plugin does not disable the core approver
+    # A CertificateRequest still has to match the allowed block here even if a plugin is specified
+    dnsNames:
+      values:
+        - "*"
   plugins:
     cel-approver-policy-plugin:
       values:
         dnsNames: >-
           ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
+  selector:
+    issuerRef: {}
 ```
 
 At this experimental stage, the plugin only supports CEL validation for a couple of commonly used CSR-fields:

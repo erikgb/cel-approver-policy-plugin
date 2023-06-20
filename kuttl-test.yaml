@@ -1,0 +1,10 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestSuite
+testDirs:
+  - test/e2e/
+# must run in a well-known namespace since we test CEL expressions using namespace
+namespace: cel-plugin-test
+commands:
+  # Create test namespace; kuttl is supposed to auto-create it, but it doesn't seem to work
+  - command: kubectl create namespace cel-plugin-test

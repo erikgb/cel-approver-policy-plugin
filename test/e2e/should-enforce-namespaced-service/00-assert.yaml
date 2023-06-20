@@ -1,0 +1,9 @@
+---
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: internal-namespaced-service
+status:
+  conditions:
+    - status: 'True'
+      type: Ready
