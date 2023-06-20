@@ -2,7 +2,15 @@
 
 This repo contains an experimental CEL
 [cert-manager/approver-policy plugin](https://cert-manager.io/docs/projects/approver-policy/#plugins)
-that allows to specify CEL expressions used to decide if `CertificateRequest`s can be approved
+that allows to specify CEL expressions used to decide if `CertificateRequest`s can be approved.
+
+Validating CSR attributes with CEL could be considered a core feature in
+[cert-manager/approver-policy](https://cert-manager.io/docs/projects/approver-policy/), and there are ongoing
+discussions with the cert-manager maintainers to somehow merge this plugin into the core of approver-policy.
+
+I have no plans to extend the features of this plugin at present, and will not accept pull requests attempting to do so.
+But please feel free to open an issue or PR (better) for bugs.
+For any questions or comments feel free to ping me on Kubernetes Slack #cert-manager-dev (@erikgb).
 
 ## Installation
 
@@ -40,6 +48,11 @@ spec:
         dnsNames: >-
           ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
 ```
+
+At this experimental stage, the plugin only supports CEL validation for a couple of commonly used CSR-fields:
+
+- `dnsNames`
+- `uris`
 
 ### Writing CEL expressions for this plugin
 
