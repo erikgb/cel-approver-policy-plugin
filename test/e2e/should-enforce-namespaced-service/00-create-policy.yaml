@@ -4,6 +4,10 @@ kind: CertificateRequestPolicy
 metadata:
   name: internal-namespaced-service
 spec:
+  allowed:
+    dnsNames:
+      values:
+        - "*"
   plugins:
     cel-approver-policy-plugin:
       values:
@@ -11,11 +15,3 @@ spec:
           ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))
   selector:
     issuerRef: {}
-status:
-  conditions:
-    - lastTransitionTime: '2023-06-20T06:51:11Z'
-      message: CertificateRequestPolicy is ready for approval evaluation
-      observedGeneration: 1
-      reason: Ready
-      status: 'True'
-      type: Ready

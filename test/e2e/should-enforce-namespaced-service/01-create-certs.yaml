@@ -37,8 +37,6 @@ spec:
 ---
 apiVersion: kuttl.dev/v1beta1
 kind: TestStep
-# increase timeout to allow certificates to be processed
-timeout: 120
 collectors:
   - type: events
   - type: events

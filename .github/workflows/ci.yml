@@ -54,16 +54,26 @@ jobs:
           tags: ${{ env.IMG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - uses: AbsaOSS/k3d-action@v2
+      - name: Start cluster
+        uses: AbsaOSS/k3d-action@v2
         with:
           k3d-version: v5.5.1
           cluster-name: ${{ env.CLUSTER_NAME }}
           args: --image docker.io/rancher/k3s:v1.27.2-k3s1
-      - run: |
+      - name: Install KUTTL
+        uses: jaxxstorm/action-install-gh-release@v1
+        with:
+          repo: kudobuilder/kuttl
+          tag: v0.15.0
+          cache: enable
+      - name: Show tools version info
+        run: |
           kubectl cluster-info
           kubectl version --output=yaml
+          kubectl kuttl version
           helm version
-      - run: |
+      - name: Deploy
+        run: |
           k3d image import ${{ env.IMG_FILE }} --cluster ${{ env.CLUSTER_NAME }}
           helm repo add jetstack https://charts.jetstack.io
           helm upgrade cert-manager jetstack/cert-manager \
@@ -79,11 +89,6 @@ jobs:
             --set image.repository="registry.dummy-domain.com/cert-manager-cel-approver-policy-plugin" \
             --set image.tag=dev \
             --wait
-      - uses: jaxxstorm/action-install-gh-release@v1
-        with:
-          repo: kudobuilder/kuttl
-          tag: v0.15.0
-          cache: enable
-      - run: |
-          kubectl kuttl version
+      - name: Run tests
+        run: |
           kubectl kuttl test
