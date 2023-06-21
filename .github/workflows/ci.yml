@@ -82,7 +82,7 @@ jobs:
             --namespace cert-manager \
             --set installCRDs=true \
             --set extraArgs={--controllers='*\,-certificaterequests-approver'} \
-            --wait --timeout 1m
+            --wait --timeout 2m
           helm upgrade cert-manager-approver-policy jetstack/cert-manager-approver-policy \
             --install \
             --namespace cert-manager \

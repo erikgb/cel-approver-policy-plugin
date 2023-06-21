@@ -1,0 +1,19 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert
+status:
+  conditions:
+    - message: 'Fields on existing CertificateRequest resource not up to date: [spec.dnsNames]'
+      reason: RequestChanged
+      status: "False"
+      type: Ready
+    - message: >-
+        The certificate request has failed to complete and will be retried:
+        No policy approved this request: [internal-namespaced-service: CSR.DNSNames[0]:
+        Invalid value: "server.other-namespace.svc.cluster.local": does not satisfy
+        policy expression ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))]
+      reason: policy.cert-manager.io
+      status: "False"
+      type: Issuing
