@@ -13,7 +13,7 @@ status:
         The certificate request has failed to complete and will be retried:
         No policy approved this request: [internal-namespaced-service: CSR.DNSNames[0]:
         Invalid value: "server.other-namespace.svc.cluster.local": does not satisfy
-        policy expression [''.svc'', ''.svc.cluster.local''].exists(d, self.endsWith(cr.namespace + d))]'
+        policy expression ['.svc', '.svc.cluster.local'].exists(d, self.endsWith(cr.namespace + d))]
       reason: policy.cert-manager.io
       status: "False"
       type: Issuing
