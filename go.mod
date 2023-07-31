@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/cert-manager/approver-policy v0.7.0
-	github.com/cert-manager/cert-manager v1.12.2
+	github.com/cert-manager/cert-manager v1.12.3
 	github.com/go-logr/logr v1.2.4
 	github.com/google/cel-go v0.17.1
 	github.com/spf13/pflag v1.0.5
