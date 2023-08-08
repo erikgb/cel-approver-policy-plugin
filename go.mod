@@ -10,7 +10,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	k8s.io/apimachinery v0.27.4
-	sigs.k8s.io/controller-runtime v0.15.0
+	sigs.k8s.io/controller-runtime v0.15.1
 )
 
 require (
