@@ -1,5 +1,5 @@
 # Build the approver-policy binary
-FROM docker.io/library/golang:1.20 as builder
+FROM docker.io/library/golang:1.21 as builder
 ARG GOPROXY
 
 WORKDIR /workspace
