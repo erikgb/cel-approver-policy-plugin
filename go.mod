@@ -9,7 +9,7 @@ require (
 	github.com/google/cel-go v0.18.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
-	k8s.io/apimachinery v0.27.4
+	k8s.io/apimachinery v0.28.1
 	sigs.k8s.io/controller-runtime v0.15.1
 )
 
@@ -36,6 +36,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
+	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -65,12 +66,12 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/term v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/term v0.10.0 // indirect
+	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -87,7 +88,7 @@ require (
 	k8s.io/component-base v0.27.2 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-aggregator v0.27.2 // indirect
-	k8s.io/kube-openapi v0.0.0-20230523194449-df37dd07aa00 // indirect
+	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
 	sigs.k8s.io/gateway-api v0.7.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
