@@ -6,7 +6,7 @@ require (
 	github.com/cert-manager/approver-policy v0.9.0
 	github.com/cert-manager/cert-manager v1.13.2
 	github.com/go-logr/logr v1.3.0
-	github.com/google/cel-go v0.18.1
+	github.com/google/cel-go v0.18.2
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	k8s.io/apimachinery v0.28.3
@@ -15,7 +15,7 @@ require (
 
 require (
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
-	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df // indirect
+	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
