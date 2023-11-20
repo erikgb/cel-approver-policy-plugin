@@ -3,7 +3,7 @@ module cel-approver-policy-plugin
 go 1.20
 
 require (
-	github.com/cert-manager/approver-policy v0.10.0
+	github.com/cert-manager/approver-policy v0.10.1
 	github.com/cert-manager/cert-manager v1.13.2
 	github.com/go-logr/logr v1.3.0
 	github.com/google/cel-go v0.18.2
