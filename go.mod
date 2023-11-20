@@ -9,7 +9,7 @@ require (
 	github.com/google/cel-go v0.18.2
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	k8s.io/apimachinery v0.28.3
+	k8s.io/apimachinery v0.28.4
 	sigs.k8s.io/controller-runtime v0.16.3
 )
 
