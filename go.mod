@@ -9,7 +9,7 @@ require (
 	github.com/google/cel-go v0.18.2
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.0
 	sigs.k8s.io/controller-runtime v0.16.3
 )
 
@@ -93,6 +93,6 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.14.3-0.20230601165947-6ce0bf390ce3 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
